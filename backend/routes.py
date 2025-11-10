@@ -183,3 +183,24 @@ def list_events():
 
     return jsonify(events)
 
+
+@events_bp.get("/<int:event_id>")
+def get_event(event_id: int):
+    event = Event.query.filter_by(event_id=event_id).first()
+    if event is None:
+        return jsonify({"error": "Event not found"}), 404
+
+    return jsonify(event.serialize())
+
+
+@events_bp.delete("/<int:event_id>")
+def delete_event(event_id: int):
+    event = Event.query.filter_by(event_id=event_id).first()
+    if event is None:
+        return jsonify({"error": "Event not found"}), 404
+
+    db.session.delete(event)
+    db.session.commit()
+
+    return jsonify({"message": "Event deleted"})
+
