@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CALENDAR | Multi-Sport Event Calendar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='calendar/styles.css') }}" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="logo">CALENDAR</div>
+      <nav class="nav">
+        <a href="#">Home</a>
+        <a href="#">Live</a>
+        <a href="#">Teams</a>
+        <a href="#">Standings</a>
+        <a href="#">Stats</a>
+      </nav>
+      <div class="cta">
+        <button id="toggleForm" class="btn btn-primary">Add Event</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="filters-panel">
+        <h2>Filters</h2>
+        <div class="filter-group">
+          <label for="sportFilter">Sport</label>
+          <select id="sportFilter">
+            <option value="">All sports</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="competitionFilter">Competition</label>
+          <select id="competitionFilter">
+            <option value="">All competitions</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="dateFilter">Date</label>
+          <input type="date" id="dateFilter" />
+        </div>
+        <div class="filter-group">
+          <label for="statusFilter">Status</label>
+          <select id="statusFilter">
+            <option value="">Any status</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button id="clearFilters" class="btn btn-secondary">Clear Filters</button>
+        </div>
+      </section>
+
+      <section class="content-panel">
+        <section id="formWrapper" class="event-form" hidden>
+          <h2>Create Event</h2>
+          <form id="eventForm">
+            <div class="form-row">
+              <label for="formCompetitionSeason">Competition Season ID</label>
+              <input type="number" id="formCompetitionSeason" name="competition_season_id" required />
+            </div>
+            <div class="form-row">
+              <label for="formDate">Event Date</label>
+              <input type="date" id="formDate" name="event_date" required />
+            </div>
+            <div class="form-row">
+              <label for="formTime">Start Time</label>
+              <input type="time" id="formTime" name="start_time" />
+            </div>
+            <div class="form-row">
+              <label for="formHomeTeam">Home Team ID</label>
+              <input type="number" id="formHomeTeam" name="home_team_id" required />
+            </div>
+            <div class="form-row">
+              <label for="formAwayTeam">Away Team ID</label>
+              <input type="number" id="formAwayTeam" name="away_team_id" required />
+            </div>
+            <div class="form-row">
+              <label for="formVenue">Venue ID (optional)</label>
+              <input type="number" id="formVenue" name="venue_id" />
+            </div>
+            <div class="form-row">
+              <label for="formStatus">Status</label>
+              <select id="formStatus" name="status">
+                <option value="scheduled" selected>Scheduled</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Save Event</button>
+              <button type="button" id="cancelForm" class="btn btn-tertiary">Cancel</button>
+            </div>
+            <p class="form-feedback" id="formFeedback"></p>
+          </form>
+        </section>
+
+        <section class="events-panel">
+          <div class="panel-header">
+            <h2>Upcoming Fixtures</h2>
+            <div class="panel-meta">
+              <span id="matchCount">0 events</span>
+            </div>
+          </div>
+          <div id="eventsEmpty" class="empty-state" hidden>
+            <h3>No matches yet</h3>
+            <p>Try adjusting your filters or add a new event.</p>
+          </div>
+          <div id="eventsGrid" class="events-grid"></div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Built with ❤️ for multi-sport fans. Data served by the CALENDAR API.
+      </p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='calendar/app.js') }}" defer></script>
+  </body>
+</html>
+
