@@ -6,7 +6,7 @@
 USE multiplesportdatabase_schema;
 
 -- ============================================================
--- ✅ NEW SUPPORT TABLES
+-- ✅ SUPPORT TABLES (CREATE IF NOT EXISTS)
 -- ============================================================
 
 -- Create table for match cards if not exists
@@ -33,51 +33,44 @@ CREATE TABLE IF NOT EXISTS match_goal (
 );
 
 -- ============================================================
--- ✅ BASE DATA
+-- ✅ SPORT
 -- ============================================================
 
--- Insert sport
 INSERT IGNORE INTO sport (name) VALUES ('football');
 
 -- ============================================================
--- ✅ Teams
+-- ✅ TEAMS
 -- ============================================================
 
 INSERT IGNORE INTO team (name, official_name, slug, abbreviation, city, country)
 VALUES 
-('Al Shabab FC', 'Al Shabab FC', 'al-shabab-fc', 'SHA', NULL, 'KSA'),
-('FC Nasaf', 'FC Nasaf', 'fc-nasaf-qarshi', 'NAS', NULL, 'UZB'),
-('Al Hilal Saudi FC', 'Al Hilal Saudi FC', 'al-hilal-saudi-fc', 'HIL', NULL, 'KSA'),
-('SHABAB AL AHLI DUBAI', 'SHABAB AL AHLI DUBAI', 'shabab-al-ahli-club', 'SAH', NULL, 'UAE'),
-('AL DUHAIL SC', 'AL DUHAIL SC', 'al-duhail-sc', 'DUH', NULL, 'QAT'),
-('AL RAYYAN SC', 'AL RAYYAN SC', 'al-rayyan-sc', 'RYN', NULL, 'QAT'),
-('Al Faisaly FC', 'Al Faisaly FC', 'al-faisaly-fc', 'FAI', NULL, 'KSA'),
-('FOOLAD KHOUZESTAN FC', 'FOOLAD KHOUZESTAN FC', 'foolad-khuzestan-fc', 'FLD', NULL, 'IRN'),
-('Urawa Red Diamonds', 'Urawa Red Diamonds', 'urawa-red-diamonds', 'RED', NULL, 'JPN');
+('Al Shabab FC',          'Al Shabab FC',          'al-shabab-fc',         'SHA', NULL, 'KSA'),
+('FC Nasaf',              'FC Nasaf',              'fc-nasaf-qarshi',      'NAS', NULL, 'UZB'),
+('Al Hilal Saudi FC',     'Al Hilal Saudi FC',     'al-hilal-saudi-fc',    'HIL', NULL, 'KSA'),
+('SHABAB AL AHLI DUBAI',  'SHABAB AL AHLI DUBAI',  'shabab-al-ahli-club',  'SAH', NULL, 'UAE'),
+('AL DUHAIL SC',          'AL DUHAIL SC',          'al-duhail-sc',         'DUH', NULL, 'QAT'),
+('AL RAYYAN SC',          'AL RAYYAN SC',          'al-rayyan-sc',         'RYN', NULL, 'QAT'),
+('Al Faisaly FC',         'Al Faisaly FC',         'al-faisaly-fc',        'FAI', NULL, 'KSA'),
+('FOOLAD KHOUZESTAN FC',  'FOOLAD KHOUZESTAN FC',  'foolad-khuzestan-fc',  'FLD', NULL, 'IRN'),
+('Urawa Red Diamonds',    'Urawa Red Diamonds',    'urawa-red-diamonds',   'RED', NULL, 'JPN');
 
 -- ============================================================
--- ✅ Competitions
+-- ✅ COMPETITION — AFC CL
 -- ============================================================
 
--- Insert AFC CL
 INSERT IGNORE INTO competition (name, sport_id, description)
 SELECT 'AFC Champions League', sport_id, 'Asian Football Confederation Champions League'
 FROM sport WHERE name = 'football';
 
--- OPTIONAL: update external_id if column exists
-UPDATE competition
-SET external_id = 'afc-champions-league'
-WHERE name = 'AFC Champions League';
-
 -- ============================================================
--- ✅ Season
+-- ✅ SEASON
 -- ============================================================
 
 INSERT IGNORE INTO season (name, start_date, end_date)
 VALUES ('2025-2026', '2025-01-01', '2026-12-31');
 
 -- ============================================================
--- ✅ Competition Season
+-- ✅ COMPETITION_SEASON (STAGES)
 -- ============================================================
 
 -- ROUND OF 16
@@ -215,7 +208,7 @@ SELECT DISTINCT
     t.team_id,
     cs.competition_season_id
 FROM team t
-CROSS JOIN competition_season cs
+JOIN competition_season cs
 JOIN competition c ON c.competition_id = cs.competition_id
 JOIN season s ON s.season_id = cs.season_id
 WHERE c.name = 'AFC Champions League'
