@@ -20,6 +20,12 @@ CREATE TABLE team (
   city VARCHAR(100),
   country VARCHAR(100),
   founded_year INT,
+
+  -- ✅ football + multi-sport friendly identity enrichment
+  official_name VARCHAR(200),
+  abbreviation VARCHAR(20),
+  slug VARCHAR(200),
+
   CONSTRAINT uq_team UNIQUE (name, city, country)
 );
 
@@ -68,6 +74,10 @@ CREATE TABLE competition_season (
   season_id INT NOT NULL,
   phase VARCHAR(100) NOT NULL,
   ruleset_id INT,
+
+  -- ✅ new for stage ordering
+  stage_ordering INT,
+
   CONSTRAINT _competition_season_competition_id_fk FOREIGN KEY (competition_id) REFERENCES competition(competition_id) ON DELETE CASCADE,
   CONSTRAINT _competition_season_season_id_fk FOREIGN KEY (season_id) REFERENCES season(season_id) ON DELETE CASCADE,
   CONSTRAINT _competition_season_ruleset_id_fk FOREIGN KEY (ruleset_id) REFERENCES ruleset(ruleset_id) ON DELETE SET NULL,
@@ -156,11 +166,32 @@ CREATE TABLE event (
   away_team_id INT NOT NULL,
   venue_id INT,
   status VARCHAR(50) DEFAULT 'scheduled',
+
+  -- ✅ new summary fields (multi-sport ok)
+  home_score INT,
+  away_score INT,
+  winner_name VARCHAR(200),
+
   CONSTRAINT chk_event_teams CHECK (home_team_id <> away_team_id),
   CONSTRAINT _event_competition_season_id_fk FOREIGN KEY (competition_season_id) REFERENCES competition_season(competition_season_id) ON DELETE CASCADE,
   CONSTRAINT _event_home_team_id_fk FOREIGN KEY (home_team_id) REFERENCES team(team_id),
   CONSTRAINT _event_away_team_id_fk FOREIGN KEY (away_team_id) REFERENCES team(team_id),
   CONSTRAINT _event_venue_id_fk FOREIGN KEY (venue_id) REFERENCES venue(venue_id)
+);
+
+-- ------------------------------------------------------------
+-- ✅ NEW: event_card → supports football + other sports
+-- ------------------------------------------------------------
+CREATE TABLE event_card (
+  card_id INT AUTO_INCREMENT PRIMARY KEY,
+  event_id INT NOT NULL,
+  player_id INT,
+  team_id INT,
+  card_type ENUM('yellow','second_yellow','red') NOT NULL,
+  timestamp DATETIME,
+  CONSTRAINT _ec_event_fk FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE,
+  CONSTRAINT _ec_player_fk FOREIGN KEY (player_id) REFERENCES player(player_id),
+  CONSTRAINT _ec_team_fk FOREIGN KEY (team_id) REFERENCES team(team_id)
 );
 
 -- ------------------------------------------------------------
@@ -308,7 +339,7 @@ CREATE TABLE team_form (
   losses INT DEFAULT 0,
   form_string VARCHAR(255),
   CONSTRAINT _team_form_team_id_fk FOREIGN KEY (team_id) REFERENCES team(team_id),
-  CONSTRAINT _team_form_competition_season_id_fk FOREIGN KEY (competition_season_id) REFERENCES competition_season(competition_season_id),
+  CONSTRAINT _team_form_competition_season_id_fk FOREIGN KEY (competition_season_season_id) REFERENCES competition_season(competition_season_id),
   CONSTRAINT uq_team_form UNIQUE (team_id, competition_season_id, last_n_games)
 );
 
