@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Events Calendar</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f5f5f5;
+      color: #222;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #f9fafb 0%, #eef2f7 100%);
+    }
+
+    nav {
+      background-color: #0b3d91;
+      color: #fff;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    nav .brand {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1.25rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    nav ul li a:hover {
+      text-decoration: underline;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    header h1 {
+      margin-bottom: 0.25rem;
+    }
+
+    .filters {
+      margin: 2rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 2rem;
+      align-items: center;
+      background-color: #fff;
+      padding: 1.25rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .filters label {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #475569;
+    }
+
+    .filters select,
+    .filters input {
+      margin-top: 0.35rem;
+      padding: 0.55rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5f5;
+      min-width: 170px;
+    }
+
+    .filters button {
+      padding: 0.6rem 1.1rem;
+      border: none;
+      background-color: #0b3d91;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .filters button:hover {
+      background-color: #092e6d;
+    }
+
+    .events-empty {
+      padding: 2rem;
+      text-align: center;
+      color: #475569;
+    }
+
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .event-card {
+      background-color: #fff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .event-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .event-header h2 {
+      font-size: 1.2rem;
+      margin: 0;
+    }
+
+    .event-status {
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      background-color: #e2e8f0;
+      color: #334155;
+      letter-spacing: 0.08em;
+    }
+
+    .teams {
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+
+    .event-meta {
+      display: grid;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    .event-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .legend {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .filters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      nav {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      nav ul {
+        width: 100%;
+        justify-content: space-around;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="brand">Multi-Sport Event Hub</div>
+    <ul>
+      <li><a href="#">Dashboard</a></li>
+      <li><a href="#">Teams</a></li>
+      <li><a href="#">Standings</a></li>
+      <li><a href="#">Settings</a></li>
+    </ul>
+  </nav>
+
+ 
