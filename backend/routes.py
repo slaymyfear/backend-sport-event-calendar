@@ -107,7 +107,6 @@ def list_events():
             CompetitionSeason.season_id,
             Competition.competition_id,
             Competition.name.label("competition_name"),
-            Competition.external_id.label("competition_external_id"),
             Sport.sport_id,
             Sport.name.label("sport_name"),
             home_team.team_id.label("home_team_id"),
@@ -170,7 +169,6 @@ def list_events():
             "competition": {
                 "competition_id": row.competition_id,
                 "name": row.competition_name,
-                "external_id": row.competition_external_id,
                 "phase": row.phase,
                 "season_id": row.season_id,
             },
