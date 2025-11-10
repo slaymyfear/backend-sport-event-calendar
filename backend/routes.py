@@ -103,25 +103,30 @@ def list_events():
             Event.start_time,
             Event.status,
             CompetitionSeason.phase,
+            CompetitionSeason.stage_ordering,
             CompetitionSeason.season_id,
             Competition.competition_id,
             Competition.name.label("competition_name"),
+            Competition.external_id.label("competition_external_id"),
             Sport.sport_id,
             Sport.name.label("sport_name"),
             home_team.team_id.label("home_team_id"),
             home_team.name.label("home_team_name"),
-            home_team.city.label("home_team_city"),
+            home_team.official_name.label("home_team_official_name"),
+            home_team.slug.label("home_team_slug"),
+            home_team.abbreviation.label("home_team_abbreviation"),
             home_team.country.label("home_team_country"),
             away_team.team_id.label("away_team_id"),
             away_team.name.label("away_team_name"),
-            away_team.city.label("away_team_city"),
+            away_team.official_name.label("away_team_official_name"),
+            away_team.slug.label("away_team_slug"),
+            away_team.abbreviation.label("away_team_abbreviation"),
             away_team.country.label("away_team_country"),
             Venue.venue_id,
             Venue.name.label("venue_name"),
             Venue.city.label("venue_city"),
-            Venue.country.label("venue_country"),
         )
-        .join(home_team, Event.home_team_id == home_team.team_id)
+        .join(home_team, Event.home_team_id == home_team.team_id, isouter=True)
         .join(away_team, Event.away_team_id == away_team.team_id)
         .join(
             CompetitionSeason,
@@ -133,45 +138,48 @@ def list_events():
         .order_by(Event.event_date, Event.start_time)
     )
 
-    events = [
-        {
+    events = []
+    for row in query.all():
+        event_dict = {
             "event_id": row.event_id,
             "competition_season_id": row.competition_season_id,
             "event_date": row.event_date.isoformat(),
-            "start_time": row.start_time.isoformat(timespec="minutes")
-            if row.start_time
-            else None,
+            "start_time": row.start_time.isoformat() if row.start_time else None,
             "status": row.status,
-            "sport": {"sport_id": row.sport_id, "name": row.sport_name},
-            "competition": {
-                "competition_id": row.competition_id,
-                "name": row.competition_name,
-                "phase": row.phase,
-                "season_id": row.season_id,
-            },
             "home_team": {
                 "team_id": row.home_team_id,
                 "name": row.home_team_name,
-                "city": row.home_team_city,
+                "official_name": row.home_team_official_name,
+                "slug": row.home_team_slug,
+                "abbreviation": row.home_team_abbreviation,
                 "country": row.home_team_country,
-            },
+            } if row.home_team_name else None,
             "away_team": {
                 "team_id": row.away_team_id,
                 "name": row.away_team_name,
-                "city": row.away_team_city,
+                "official_name": row.away_team_official_name,
+                "slug": row.away_team_slug,
+                "abbreviation": row.away_team_abbreviation,
                 "country": row.away_team_country,
-            },
+            } if row.away_team_name else None,
             "venue": {
                 "venue_id": row.venue_id,
                 "name": row.venue_name,
                 "city": row.venue_city,
-                "country": row.venue_country,
-            }
-            if row.venue_id
-            else None,
+            } if row.venue_name else None,
+            "competition": {
+                "competition_id": row.competition_id,
+                "name": row.competition_name,
+                "external_id": row.competition_external_id,
+                "phase": row.phase,
+                "season_id": row.season_id,
+            },
+            "sport": {
+                "sport_id": row.sport_id,
+                "name": row.sport_name,
+            },
         }
-        for row in query.all()
-    ]
+        events.append(event_dict)
 
     return jsonify(events)
 
