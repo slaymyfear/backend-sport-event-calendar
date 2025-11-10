@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Console | CALENDAR</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin/styles.css') }}" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <div class="brand">
+        <h1>CALENDAR Admin</h1>
+        <p>Manage fixtures across every sport</p>
+      </div>
+      <nav class="admin-nav">
+        <a href="/">View Calendar</a>
+        <a href="/events" target="_blank">Events API</a>
+      </nav>
+    </header>
+
+    <main class="admin-layout">
+      <section class="form-section">
+        <h2>Create New Event</h2>
+        <form id="adminEventForm" class="event-form">
+          <div class="form-grid">
+            <label>
+              Competition Season ID
+              <input type="number" name="competition_season_id" required />
+            </label>
+            <label>
+              Event Date
+              <input type="date" name="event_date" required />
+            </label>
+            <label>
+              Start Time
+              <input type="time" name="start_time" />
+            </label>
+            <label>
+              Home Team ID
+              <input type="number" name="home_team_id" required />
+            </label>
+            <label>
+              Away Team ID
+              <input type="number" name="away_team_id" required />
+            </label>
+            <label>
+              Venue ID
+              <input type="number" name="venue_id" />
+            </label>
+            <label>
+              Status
+              <select name="status">
+                <option value="scheduled">Scheduled</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create Event</button>
+            <span id="formStatus" class="form-status" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="table-section">
+        <div class="table-header">
+          <h2>Event Registry</h2>
+          <div class="table-tools">
+            <input type="search" id="searchInput" placeholder="Search teams or competition" />
+            <button id="refreshBtn" class="btn btn-secondary">Refresh</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="eventsTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Sport</th>
+                <th>Competition</th>
+                <th>Fixture</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div id="tableEmpty" class="empty-state">No events yet.</div>
+        </div>
+      </section>
+    </main>
+
+    <template id="eventRowTemplate">
+      <tr>
+        <td data-field="event_id"></td>
+        <td data-field="event_date"></td>
+        <td data-field="start_time"></td>
+        <td data-field="sport"></td>
+        <td data-field="competition"></td>
+        <td data-field="fixture"></td>
+        <td data-field="status"></td>
+        <td class="actions">
+          <button type="button" class="btn btn-danger" data-action="delete">Delete</button>
+        </td>
+      </tr>
+    </template>
+
+    <script src="{{ url_for('static', filename='admin/admin.js') }}" defer></script>
+  </body>
+</html>
+
+
+
