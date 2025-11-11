@@ -186,5 +186,18 @@ class Event(db.Model):
         return payload
 
 
-__all__ = ["Competition", "CompetitionSeason", "Event", "Sport", "Team", "Venue"]
+class Period(db.Model):
+    __tablename__ = "period"
+
+    period_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_id: Mapped[int] = mapped_column(ForeignKey("event.event_id"), nullable=False)
+    ruleset_id: Mapped[Optional[int]] = mapped_column(Integer)
+    period_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    start_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    end_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    home_score: Mapped[Optional[int]] = mapped_column(Integer, default=0)
+    away_score: Mapped[Optional[int]] = mapped_column(Integer, default=0)
+
+
+__all__ = ["Competition", "CompetitionSeason", "Event", "Sport", "Team", "Venue", "Period"]
 
