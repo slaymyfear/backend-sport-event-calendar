@@ -1,190 +1,232 @@
-"""Database models for event management endpoints."""
+"""Flask blueprints for event operations."""
 
 from __future__ import annotations
 
-from datetime import date, datetime, time
-from typing import Dict, Optional
+from datetime import date, time
+from typing import Any, Dict, Optional
 
-from sqlalchemy import (
-    CheckConstraint,
-    Date,
-    DateTime,
-    ForeignKey,
-    Integer,
-    String,
-    Time,
-)
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from flask import Blueprint, jsonify, request
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import aliased
 
 from backend import db
+from backend.models import (
+    Competition,
+    CompetitionSeason,
+    Event,
+    Sport,
+    Team,
+    Venue,
+)
+
+events_bp = Blueprint("events", __name__)
 
 
-class Sport(db.Model):
-    __tablename__ = "sport"
-
-    sport_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-
-    def to_reference(self) -> Dict[str, Optional[str]]:
-        return {"sport_id": self.sport_id, "name": self.name}
+def _parse_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:  # pragma: no cover - defensive path
+        raise ValueError("event_date must be in ISO format YYYY-MM-DD") from exc
 
 
-class Competition(db.Model):
-    __tablename__ = "competition"
-
-    competition_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(200), nullable=False)
-    sport_id: Mapped[int] = mapped_column(ForeignKey("sport.sport_id"), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(500))
-    external_id: Mapped[Optional[str]] = mapped_column(String(100))
-
-    sport: Mapped[Sport] = relationship(Sport, lazy="joined")
-
-    def to_reference(self) -> Dict[str, Optional[str]]:
-        return {
-            "competition_id": self.competition_id,
-            "name": self.name,
-            "description": self.description,
-        }
+def _parse_time(value: Optional[str]) -> Optional[time]:
+    if value in (None, ""):
+        return None
+    try:
+        return time.fromisoformat(value)
+    except ValueError as exc:  # pragma: no cover - defensive path
+        raise ValueError("start_time must be in ISO format HH:MM[:SS]") from exc
 
 
-class Team(db.Model):
-    __tablename__ = "team"
+@events_bp.post("")
+def create_event():
+    payload: Dict[str, Any] = request.get_json(force=True)
 
-    team_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(200), nullable=False)
-    official_name: Mapped[Optional[str]] = mapped_column(String(200))
-    slug: Mapped[Optional[str]] = mapped_column(String(200))
-    abbreviation: Mapped[Optional[str]] = mapped_column(String(10))
-    logo_url: Mapped[Optional[str]] = mapped_column(String(500))
-    city: Mapped[Optional[str]] = mapped_column(String(100))
-    country: Mapped[Optional[str]] = mapped_column(String(100))
-    founded_year: Mapped[Optional[int]] = mapped_column(Integer)
+    required_fields = [
+        "competition_season_id",
+        "event_date",
+        "home_team_id",
+        "away_team_id",
+    ]
 
-    def to_reference(self) -> Dict[str, Optional[str]]:
-        return {
-            "team_id": self.team_id,
-            "name": self.name,
-            "city": self.city,
-            "country": self.country,
-        }
+    missing = [field for field in required_fields if field not in payload]
+    if missing:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
 
+    competition_season_id = int(payload["competition_season_id"])
+    event_date = _parse_date(str(payload["event_date"]))
+    start_time = _parse_time(payload.get("start_time"))
+    home_team_id = int(payload["home_team_id"])
+    away_team_id = int(payload["away_team_id"])
+    venue_id = payload.get("venue_id")
+    status = payload.get("status", "scheduled")
+    home_score = payload.get("home_score")
+    away_score = payload.get("away_score")
 
-class CompetitionSeason(db.Model):
-    __tablename__ = "competition_season"
+    if home_team_id == away_team_id:
+        return jsonify({"error": "home_team_id and away_team_id must differ"}), 400
 
-    competition_season_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    competition_id: Mapped[int] = mapped_column(
-        ForeignKey("competition.competition_id"), nullable=False
-    )
-    season_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    phase: Mapped[str] = mapped_column(String(100), nullable=False)
-    stage_ordering: Mapped[Optional[int]] = mapped_column(Integer)
-    ruleset_id: Mapped[Optional[int]] = mapped_column(Integer)
-
-    competition: Mapped[Competition] = relationship(Competition, lazy="joined")
-
-
-class Venue(db.Model):
-    __tablename__ = "venue"
-
-    venue_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(200), nullable=False)
-    city: Mapped[Optional[str]] = mapped_column(String(100))
-    country: Mapped[Optional[str]] = mapped_column(String(100))
-    capacity: Mapped[Optional[int]] = mapped_column(Integer)
-
-
-class Event(db.Model):
-    __tablename__ = "event"
-    __table_args__ = (
-        CheckConstraint("home_team_id <> away_team_id", name="chk_event_teams"),
+    event = Event(
+        competition_season_id=competition_season_id,
+        event_date=event_date,
+        start_time=start_time,
+        home_team_id=home_team_id,
+        away_team_id=away_team_id,
+        venue_id=int(venue_id) if venue_id is not None else None,
+        status=status,
+        home_score=int(home_score) if home_score is not None else None,
+        away_score=int(away_score) if away_score is not None else None,
     )
 
-    event_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    competition_season_id: Mapped[int] = mapped_column(
-        ForeignKey("competition_season.competition_season_id"), nullable=False
-    )
-    event_date: Mapped[date] = mapped_column(Date, nullable=False)
-    start_time: Mapped[Optional[time]] = mapped_column(Time)
-    home_team_id: Mapped[int] = mapped_column(
-        ForeignKey("team.team_id"), nullable=False
-    )
-    away_team_id: Mapped[int] = mapped_column(
-        ForeignKey("team.team_id"), nullable=False
-    )
-    venue_id: Mapped[Optional[int]] = mapped_column(ForeignKey("venue.venue_id"))
-    status: Mapped[str] = mapped_column(String(50), default="scheduled", nullable=False)
-    home_score: Mapped[Optional[int]] = mapped_column(Integer)
-    away_score: Mapped[Optional[int]] = mapped_column(Integer)
+    db.session.add(event)
 
-    home_team: Mapped[Team] = relationship(
-        Team,
-        foreign_keys=[home_team_id],
-        lazy="joined",
+    try:
+        db.session.commit()
+    except IntegrityError as exc:
+        db.session.rollback()
+        return (
+            jsonify({"error": "Failed to create event", "details": str(exc.orig)}),
+            400,
+        )
+
+    fresh_event = Event.query.filter_by(event_id=event.event_id).first()
+
+    return jsonify(fresh_event.serialize() if fresh_event else event.serialize()), 201
+
+
+@events_bp.get("")
+def list_events():
+    home_team = aliased(Team)
+    away_team = aliased(Team)
+
+    query = (
+        db.session.query(
+            Event.event_id,
+            Event.competition_season_id,
+            Event.event_date,
+            Event.start_time,
+            Event.status,
+            Event.home_score,
+            Event.away_score,
+            CompetitionSeason.phase,
+            CompetitionSeason.stage_ordering,
+            CompetitionSeason.season_id,
+            Competition.competition_id,
+            Competition.name.label("competition_name"),
+            Sport.sport_id,
+            Sport.name.label("sport_name"),
+            home_team.team_id.label("home_team_id"),
+            home_team.name.label("home_team_name"),
+            home_team.official_name.label("home_team_official_name"),
+            home_team.slug.label("home_team_slug"),
+            home_team.abbreviation.label("home_team_abbreviation"),
+            home_team.country.label("home_team_country"),
+            away_team.team_id.label("away_team_id"),
+            away_team.name.label("away_team_name"),
+            away_team.official_name.label("away_team_official_name"),
+            away_team.slug.label("away_team_slug"),
+            away_team.abbreviation.label("away_team_abbreviation"),
+            away_team.country.label("away_team_country"),
+            Venue.venue_id,
+            Venue.name.label("venue_name"),
+            Venue.city.label("venue_city"),
+        )
+        .join(home_team, Event.home_team_id == home_team.team_id, isouter=True)
+        .join(away_team, Event.away_team_id == away_team.team_id)
+        .join(
+            CompetitionSeason,
+            Event.competition_season_id == CompetitionSeason.competition_season_id,
+        )
+        .join(Competition, CompetitionSeason.competition_id == Competition.competition_id)
+        .join(Sport, Competition.sport_id == Sport.sport_id)
+        .outerjoin(Venue, Event.venue_id == Venue.venue_id)
+        .order_by(Event.event_date, Event.start_time)
     )
-    away_team: Mapped[Team] = relationship(
-        Team,
-        foreign_keys=[away_team_id],
-        lazy="joined",
-    )
-    competition_season: Mapped[CompetitionSeason] = relationship(
-        CompetitionSeason, foreign_keys=[competition_season_id], lazy="joined"
-    )
-    venue: Mapped[Optional[Venue]] = relationship(
-        Venue, foreign_keys=[venue_id], lazy="joined"
-    )
 
-    def serialize(self) -> Dict[str, Optional[str]]:
-        """Return a JSON-friendly representation of an event."""
+    events = []
+    for row in query.all():
+        # Determine display status:
+        # - If scores present, it's played
+        # - Otherwise show scheduled (even if date is in the past as requested)
+        has_scores = (
+            getattr(row, "home_score", None) is not None
+            and getattr(row, "away_score", None) is not None
+        )
+        # Prefer the explicitly stored status when available
+        if row.status and row.status.lower() == "played":
+            computed_status = "played"
+        elif has_scores:
+            computed_status = "played"
+        else:
+            computed_status = "scheduled"
 
-        def _format_date(value: Optional[date]) -> Optional[str]:
-            return value.isoformat() if value else None
-
-        def _format_time(value: Optional[time]) -> Optional[str]:
-            return value.isoformat(timespec="minutes") if value else None
-
-        def _format_datetime(value: Optional[datetime]) -> Optional[str]:
-            return value.isoformat() if value else None
-
-        payload = {
-            "event_id": self.event_id,
-            "competition_season_id": self.competition_season_id,
-            "event_date": _format_date(self.event_date),
-            "start_time": _format_time(self.start_time),
-            "status": self.status,
-            "home_score": self.home_score,
-            "away_score": self.away_score,
+        event_dict = {
+            "event_id": row.event_id,
+            "competition_season_id": row.competition_season_id,
+            "event_date": row.event_date.isoformat(),
+            "start_time": row.start_time.isoformat() if row.start_time else None,
+            "status": computed_status,
+            "home_score": getattr(row, "home_score", None),
+            "away_score": getattr(row, "away_score", None),
             "score": (
-                f"{self.home_score} - {self.away_score}"
-                if self.home_score is not None and self.away_score is not None
+                f"{row.home_score} - {row.away_score}"
+                if has_scores
                 else None
             ),
-            "home_team": self.home_team.to_reference() if self.home_team else None,
-            "away_team": self.away_team.to_reference() if self.away_team else None,
+            "home_team": {
+                "team_id": row.home_team_id,
+                "name": row.home_team_name,
+                "official_name": row.home_team_official_name,
+                "slug": row.home_team_slug,
+                "abbreviation": row.home_team_abbreviation,
+                "country": row.home_team_country,
+            } if row.home_team_name else None,
+            "away_team": {
+                "team_id": row.away_team_id,
+                "name": row.away_team_name,
+                "official_name": row.away_team_official_name,
+                "slug": row.away_team_slug,
+                "abbreviation": row.away_team_abbreviation,
+                "country": row.away_team_country,
+            } if row.away_team_name else None,
             "venue": {
-                "venue_id": self.venue.venue_id,
-                "name": self.venue.name,
-                "city": self.venue.city,
-                "country": self.venue.country,
-            }
-            if self.venue
-            else None,
+                "venue_id": row.venue_id,
+                "name": row.venue_name,
+                "city": row.venue_city,
+            } if row.venue_name else None,
+            "competition": {
+                "competition_id": row.competition_id,
+                "name": row.competition_name,
+                "phase": row.phase,
+                "season_id": row.season_id,
+            },
+            "sport": {
+                "sport_id": row.sport_id,
+                "name": row.sport_name,
+            },
         }
+        events.append(event_dict)
 
-        competition = (
-            self.competition_season.competition if self.competition_season else None
-        )
-        if competition:
-            payload["competition"] = competition.to_reference()
-            payload["competition"]["phase"] = self.competition_season.phase
-            payload["competition"]["season_id"] = self.competition_season.season_id
-            payload["sport"] = (
-                competition.sport.to_reference() if competition.sport else None
-            )
-
-        return payload
+    return jsonify(events)
 
 
-__all__ = ["Competition", "CompetitionSeason", "Event", "Sport", "Team", "Venue"]
+@events_bp.get("/<int:event_id>")
+def get_event(event_id: int):
+    event = Event.query.filter_by(event_id=event_id).first()
+    if event is None:
+        return jsonify({"error": "Event not found"}), 404
+
+    return jsonify(event.serialize())
+
+
+@events_bp.delete("/<int:event_id>")
+def delete_event(event_id: int):
+    event = Event.query.filter_by(event_id=event_id).first()
+    if event is None:
+        return jsonify({"error": "Event not found"}), 404
+
+    db.session.delete(event)
+    db.session.commit()
+
+    return jsonify({"message": "Event deleted"})
 
