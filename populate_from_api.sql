@@ -1,12 +1,12 @@
--- populate_from_api.sql (Updated for MySQL 8.0)
+-- populate_from_api.sql (Updated with all 5 matches)
 -- First, let's make sure we're using the correct database
 USE multiplesportdatabase_schema;
 
--- Check and add columns only if they don't exist (MySQL 8.0 compatible approach)
+-- Add new columns to existing tables only if they don't exist
 SET @dbname = DATABASE();
-SET @table_name = 'team';
 
--- Check and add official_name
+-- Check and add columns to team table
+SET @table_name = 'team';
 SET @column_name = 'official_name';
 SET @check_sql = CONCAT(
     'SELECT COUNT(*) INTO @col_exists FROM information_schema.COLUMNS ',
@@ -18,7 +18,7 @@ DEALLOCATE PREPARE stmt;
 
 SET @add_sql = IF(@col_exists = 0, 
     'ALTER TABLE team ADD COLUMN official_name VARCHAR(200)', 
-    'SELECT "Column already exists"');
+    'SELECT "official_name column already exists" AS message');
 PREPARE stmt FROM @add_sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -31,7 +31,7 @@ DEALLOCATE PREPARE stmt;
 
 SET @add_sql = IF(@col_exists = 0, 
     'ALTER TABLE team ADD COLUMN slug VARCHAR(200)', 
-    'SELECT "Column already exists"');
+    'SELECT "slug column already exists" AS message');
 PREPARE stmt FROM @add_sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -44,7 +44,7 @@ DEALLOCATE PREPARE stmt;
 
 SET @add_sql = IF(@col_exists = 0, 
     'ALTER TABLE team ADD COLUMN abbreviation VARCHAR(10)', 
-    'SELECT "Column already exists"');
+    'SELECT "abbreviation column already exists" AS message');
 PREPARE stmt FROM @add_sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -58,7 +58,7 @@ DEALLOCATE PREPARE stmt;
 
 SET @add_sql = IF(@col_exists = 0, 
     'ALTER TABLE competition ADD COLUMN external_id VARCHAR(100)', 
-    'SELECT "Column already exists"');
+    'SELECT "external_id column already exists" AS message');
 PREPARE stmt FROM @add_sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -72,7 +72,7 @@ DEALLOCATE PREPARE stmt;
 
 SET @add_sql = IF(@col_exists = 0, 
     'ALTER TABLE competition_season ADD COLUMN stage_ordering INT', 
-    'SELECT "Column already exists"');
+    'SELECT "stage_ordering column already exists" AS message');
 PREPARE stmt FROM @add_sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -126,6 +126,7 @@ INSERT IGNORE INTO season (name, start_date, end_date)
 VALUES ('2025-2026', '2025-01-01', '2026-12-31');
 
 -- Insert competition_season if it doesn't exist (now including stage ordering)
+-- ROUND OF 16 stage
 INSERT IGNORE INTO competition_season (competition_id, season_id, phase, stage_ordering)
 SELECT 
     c.competition_id, 
@@ -136,7 +137,7 @@ FROM competition c
 JOIN season s ON s.name = '2025-2026'
 WHERE c.name = 'AFC Champions League';
 
--- Also add the FINAL stage
+-- FINAL stage
 INSERT IGNORE INTO competition_season (competition_id, season_id, phase, stage_ordering)
 SELECT 
     c.competition_id, 
@@ -147,70 +148,119 @@ FROM competition c
 JOIN season s ON s.name = '2025-2026'
 WHERE c.name = 'AFC Champions League';
 
--- Insert events
+-- Insert events for all 5 matches from the JSON
 INSERT IGNORE INTO event (
     competition_season_id,
     event_date,
     start_time,
     home_team_id,
     away_team_id,
-    status
+    status,
+    home_score,
+    away_score
 )
+-- Match 1: Al Shabab FC vs FC Nasaf (played on 2025-11-03)
 SELECT 
     cs.competition_season_id,
     '2025-11-03',
     '00:00:00',
     ht.team_id,
     at.team_id,
-    'played'
+    'played',
+    1,  -- homeGoals from JSON
+    2   -- awayGoals from JSON
 FROM competition_season cs
 JOIN competition c ON c.competition_id = cs.competition_id
 JOIN season s ON s.season_id = cs.season_id
 JOIN team ht ON ht.name = 'Al Shabab FC'
 JOIN team at ON at.name = 'FC Nasaf'
-WHERE c.name = 'AFC Champions League' AND s.name = '2025-2026'
+WHERE c.name = 'AFC Champions League' 
+AND s.name = '2025-2026'
+AND cs.phase = 'ROUND OF 16'
+
 UNION ALL
+
+-- Match 2: Al Hilal Saudi FC vs SHABAB AL AHLI DUBAI (scheduled on 2025-11-03)
 SELECT 
     cs.competition_season_id,
     '2025-11-03',
     '16:00:00',
     ht.team_id,
     at.team_id,
-    'scheduled'
+    'scheduled',
+    0,  -- homeGoals from JSON
+    0   -- awayGoals from JSON
 FROM competition_season cs
 JOIN competition c ON c.competition_id = cs.competition_id
 JOIN season s ON s.season_id = cs.season_id
 JOIN team ht ON ht.name = 'Al Hilal Saudi FC'
 JOIN team at ON at.name = 'SHABAB AL AHLI DUBAI'
-WHERE c.name = 'AFC Champions League' AND s.name = '2025-2026'
+WHERE c.name = 'AFC Champions League' 
+AND s.name = '2025-2026'
+AND cs.phase = 'ROUND OF 16'
+
 UNION ALL
+
+-- Match 3: AL DUHAIL SC vs AL RAYYAN SC (scheduled on 2025-11-04)
 SELECT 
     cs.competition_season_id,
     '2025-11-04',
     '15:25:00',
     ht.team_id,
     at.team_id,
-    'scheduled'
+    'scheduled',
+    0,  -- homeGoals from JSON
+    0   -- awayGoals from JSON
 FROM competition_season cs
 JOIN competition c ON c.competition_id = cs.competition_id
 JOIN season s ON s.season_id = cs.season_id
 JOIN team ht ON ht.name = 'AL DUHAIL SC'
 JOIN team at ON at.name = 'AL RAYYAN SC'
-WHERE c.name = 'AFC Champions League' AND s.name = '2025-2026'
+WHERE c.name = 'AFC Champions League' 
+AND s.name = '2025-2026'
+AND cs.phase = 'ROUND OF 16'
+
 UNION ALL
+
+-- Match 4: Al Faisaly FC vs FOOLAD KHOUZESTAN FC (scheduled on 2025-11-04)
 SELECT 
     cs.competition_season_id,
     '2025-11-04',
     '08:00:00',
     ht.team_id,
     at.team_id,
-    'scheduled'
+    'scheduled',
+    0,  -- homeGoals from JSON
+    0   -- awayGoals from JSON
 FROM competition_season cs
 JOIN competition c ON c.competition_id = cs.competition_id
 JOIN season s ON s.season_id = cs.season_id
 JOIN team ht ON ht.name = 'Al Faisaly FC'
 JOIN team at ON at.name = 'FOOLAD KHOUZESTAN FC'
-WHERE c.name = 'AFC Champions League' AND s.name = '2025-2026';
+WHERE c.name = 'AFC Champions League' 
+AND s.name = '2025-2026'
+AND cs.phase = 'ROUND OF 16'
+
+UNION ALL
+
+-- Match 5: TBD vs Urawa Red Diamonds (FINAL stage on 2025-11-19)
+-- Note: This match has null home team in JSON, so we'll set home_team_id to NULL
+SELECT 
+    cs.competition_season_id,
+    '2025-11-19',
+    '00:00:00',
+    NULL,  -- home_team_id is NULL as per JSON
+    at.team_id,
+    'scheduled',
+    NULL,  -- homeGoals unknown
+    NULL   -- awayGoals unknown
+FROM competition_season cs
+JOIN competition c ON c.competition_id = cs.competition_id
+JOIN season s ON s.season_id = cs.season_id
+JOIN team at ON at.name = 'Urawa Red Diamonds'
+WHERE c.name = 'AFC Champions League' 
+AND s.name = '2025-2026'
+AND cs.phase = 'FINAL';
 
 -- Insert period for the played match (Al Shabab vs Nasaf) if it doesn't exist
 INSERT IGNORE INTO period (
@@ -222,14 +272,15 @@ INSERT IGNORE INTO period (
 SELECT 
     e.event_id,
     1,  -- Assuming one period for simplicity
-    1,  -- Home goals
-    2   -- Away goals
+    1,  -- Home goals from JSON
+    2   -- Away goals from JSON
 FROM event e
 JOIN team ht ON e.home_team_id = ht.team_id
 JOIN team at ON e.away_team_id = at.team_id
 WHERE ht.name = 'Al Shabab FC' 
 AND at.name = 'FC Nasaf'
-AND e.event_date = '2025-11-03';
+AND e.event_date = '2025-11-03'
+AND e.status = 'played';
 
 -- Insert team_competition entries for all teams
 INSERT IGNORE INTO team_competition (team_id, competition_season_id)
@@ -251,3 +302,23 @@ AND t.name IN (
     'FOOLAD KHOUZESTAN FC',
     'Urawa Red Diamonds'
 );
+
+-- Verify the inserted events
+SELECT 
+    'Event verification' AS check_type,
+    e.event_id,
+    e.event_date,
+    e.start_time,
+    ht.name as home_team,
+    at.name as away_team,
+    e.home_score,
+    e.away_score,
+    e.status,
+    cs.phase as stage
+FROM event e
+LEFT JOIN team ht ON e.home_team_id = ht.team_id
+JOIN team at ON e.away_team_id = at.team_id
+JOIN competition_season cs ON e.competition_season_id = cs.competition_season_id
+JOIN competition c ON cs.competition_id = c.competition_id
+WHERE c.name = 'AFC Champions League'
+ORDER BY e.event_date, e.start_time;
