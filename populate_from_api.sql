@@ -1,17 +1,81 @@
+-- populate_from_api.sql (Updated for MySQL 8.0)
 -- First, let's make sure we're using the correct database
 USE multiplesportdatabase_schema;
 
--- Add new columns to existing tables
-ALTER TABLE team 
-ADD COLUMN official_name VARCHAR(200),
-ADD COLUMN slug VARCHAR(200),
-ADD COLUMN abbreviation VARCHAR(10);
+-- Check and add columns only if they don't exist (MySQL 8.0 compatible approach)
+SET @dbname = DATABASE();
+SET @table_name = 'team';
 
-ALTER TABLE competition 
-ADD COLUMN external_id VARCHAR(100);
+-- Check and add official_name
+SET @column_name = 'official_name';
+SET @check_sql = CONCAT(
+    'SELECT COUNT(*) INTO @col_exists FROM information_schema.COLUMNS ',
+    'WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+);
+PREPARE stmt FROM @check_sql;
+EXECUTE stmt USING @dbname, @table_name, @column_name;
+DEALLOCATE PREPARE stmt;
 
-ALTER TABLE competition_season 
-ADD COLUMN stage_ordering INT;
+SET @add_sql = IF(@col_exists = 0, 
+    'ALTER TABLE team ADD COLUMN official_name VARCHAR(200)', 
+    'SELECT "Column already exists"');
+PREPARE stmt FROM @add_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Check and add slug
+SET @column_name = 'slug';
+PREPARE stmt FROM @check_sql;
+EXECUTE stmt USING @dbname, @table_name, @column_name;
+DEALLOCATE PREPARE stmt;
+
+SET @add_sql = IF(@col_exists = 0, 
+    'ALTER TABLE team ADD COLUMN slug VARCHAR(200)', 
+    'SELECT "Column already exists"');
+PREPARE stmt FROM @add_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Check and add abbreviation
+SET @column_name = 'abbreviation';
+PREPARE stmt FROM @check_sql;
+EXECUTE stmt USING @dbname, @table_name, @column_name;
+DEALLOCATE PREPARE stmt;
+
+SET @add_sql = IF(@col_exists = 0, 
+    'ALTER TABLE team ADD COLUMN abbreviation VARCHAR(10)', 
+    'SELECT "Column already exists"');
+PREPARE stmt FROM @add_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Add external_id to competition if it doesn't exist
+SET @table_name = 'competition';
+SET @column_name = 'external_id';
+PREPARE stmt FROM @check_sql;
+EXECUTE stmt USING @dbname, @table_name, @column_name;
+DEALLOCATE PREPARE stmt;
+
+SET @add_sql = IF(@col_exists = 0, 
+    'ALTER TABLE competition ADD COLUMN external_id VARCHAR(100)', 
+    'SELECT "Column already exists"');
+PREPARE stmt FROM @add_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Add stage_ordering to competition_season if it doesn't exist
+SET @table_name = 'competition_season';
+SET @column_name = 'stage_ordering';
+PREPARE stmt FROM @check_sql;
+EXECUTE stmt USING @dbname, @table_name, @column_name;
+DEALLOCATE PREPARE stmt;
+
+SET @add_sql = IF(@col_exists = 0, 
+    'ALTER TABLE competition_season ADD COLUMN stage_ordering INT', 
+    'SELECT "Column already exists"');
+PREPARE stmt FROM @add_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- Create new table for match cards if it doesn't exist
 CREATE TABLE IF NOT EXISTS match_card (
@@ -84,7 +148,7 @@ JOIN season s ON s.name = '2025-2026'
 WHERE c.name = 'AFC Champions League';
 
 -- Insert events
-INSERT INTO event (
+INSERT IGNORE INTO event (
     competition_season_id,
     event_date,
     start_time,
@@ -148,8 +212,8 @@ JOIN team ht ON ht.name = 'Al Faisaly FC'
 JOIN team at ON at.name = 'FOOLAD KHOUZESTAN FC'
 WHERE c.name = 'AFC Champions League' AND s.name = '2025-2026';
 
--- Insert period for the played match (Al Shabab vs Nasaf)
-INSERT INTO period (
+-- Insert period for the played match (Al Shabab vs Nasaf) if it doesn't exist
+INSERT IGNORE INTO period (
     event_id,
     period_number,
     home_score,
