@@ -115,6 +115,8 @@ class Event(db.Model):
     )
     venue_id: Mapped[Optional[int]] = mapped_column(ForeignKey("venue.venue_id"))
     status: Mapped[str] = mapped_column(String(50), default="scheduled", nullable=False)
+    home_score: Mapped[Optional[int]] = mapped_column(Integer)
+    away_score: Mapped[Optional[int]] = mapped_column(Integer)
 
     home_team: Mapped[Team] = relationship(
         Team,
@@ -151,6 +153,13 @@ class Event(db.Model):
             "event_date": _format_date(self.event_date),
             "start_time": _format_time(self.start_time),
             "status": self.status,
+            "home_score": self.home_score,
+            "away_score": self.away_score,
+            "score": (
+                f"{self.home_score} - {self.away_score}"
+                if self.home_score is not None and self.away_score is not None
+                else None
+            ),
             "home_team": self.home_team.to_reference() if self.home_team else None,
             "away_team": self.away_team.to_reference() if self.away_team else None,
             "venue": {
