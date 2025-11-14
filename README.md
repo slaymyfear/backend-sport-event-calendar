@@ -11,7 +11,7 @@ Multi-Sport Event Calendar Management System
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
 - [Troubleshooting](#troubleshooting)
-- [EER DIAGRAM](#EERDIAGRAM)
+- [EER DIAGRAM](#EER-DIAGRAM)
 
 ---
 
@@ -414,6 +414,7 @@ mysql -u root -p < populate_database.sql
 - [ ] Player statistics tracking
 - [ ] Team rankings and standings
 - [ ] Match predictions API
+---
 
 ## EER DIAGRAM
 <img width="1611" height="1241" alt="eer diagram" src="https://github.com/user-attachments/assets/d93978a4-31b5-42f1-8106-e6aaa9d64060" />
