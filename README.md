@@ -392,17 +392,13 @@ MYSQL_DATABASE=multiplesportdatabase_schema
 - Use strong passwords in production
 - Consider using environment-specific configurations
 
-### Step 6: Populate Initial Data (Optional)
+### Step 6: Populate Initial Data (small)
 
-If you want to populate the database with sample data:
+If you want to populate the database with small data from the json file:
 
 ```bash
 # Populate with sports data
-mysql -u root -p multiplesportdatabase_schema < populate_withmultiple_sports.sql
-
-# Or populate from API (if you have API access)
-mysql -u root -p multiplesportdatabase_schema < populate_from_api.sql
-```
+mysql -u root -p multiplesportdatabase_schema < populate_withsmall.sql
 
 ### Step 7: Run the Application
 
