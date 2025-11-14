@@ -11,7 +11,7 @@ Multi-Sport Event Calendar Management System
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
 - [Troubleshooting](#troubleshooting)
-- [EER DIAGRAM](#EER DIAGRAM)
+- [EER DIAGRAM](#EERDIAGRAM)
 
 ---
 
@@ -177,7 +177,7 @@ venue
 
 ### Step 1: Clone Repository
 ```bash
-cd /Users/emmanuelikeh/Desktop/backend-sport-event-calendar
+(https://github.com/slaymyfear/backend-sport-event-calendar.git)
 ```
 
 ### Step 2: Create Virtual Environment
