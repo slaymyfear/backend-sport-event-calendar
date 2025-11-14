@@ -57,7 +57,7 @@ The system supports:
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
 
@@ -100,7 +100,7 @@ The system supports:
 
 ---
 
-## 🏗️ Project Architecture
+## Project Architecture
 
 ### Application Factory Pattern
 
@@ -172,7 +172,7 @@ The project uses Flask's application factory pattern, which provides:
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### Entity Relationship Overview
 
@@ -282,7 +282,7 @@ Sport (1) ────< (Many) Competition
 
 ---
 
-## 📦 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 
@@ -430,7 +430,7 @@ You should see output like:
 4. Try creating an event through the admin interface
 
 
-## 🚀 Usage
+## Usage
 
 ### User Interface
 
@@ -517,7 +517,7 @@ response = requests.post('http://localhost:5000/events', json=new_event)
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 project_work/
@@ -630,7 +630,7 @@ project_work/
 
 ---
 
-## 🌐 API Endpoints
+## API Endpoints
 
 ### Base URL
 
@@ -866,7 +866,8 @@ Common HTTP status codes:
 
 ## EER Diagram
 
-The Entity-Relationship (EER) diagram for this project is available as:<img width="1611" height="1241" alt="eer diagram" src=¨https://github.com/slaymyfear/backend-sport-event-calendar/blob/main/eer%20diagram.png¨ />
+The Entity-Relationship (EER) diagram for this project is available as:
+<img width="1611" height="1241" alt="eer diagram" src="https://github.com/user-attachments/assets/d93978a4-31b5-42f1-8106-e6aaa9d64060" />
 
 **File**: `eer diagram.png`
 
@@ -894,8 +895,3 @@ This diagram visually represents:
 
 ---
 
-
-## EER DIAGRAM
-<img width="1611" height="1241" alt="eer diagram" src="https://github.com/user-attachments/assets/d93978a4-31b5-42f1-8106-e6aaa9d64060" />
-
----
